@@ -26,6 +26,10 @@ def format_booking_number(bn_int):
 # Initialize FPDF class
 class PDF(FPDF):
     widths = (30, 68, 60, 25)
+    local_page_no = 0
+
+    def new_document(self):
+        self.local_page_no = self.page_no()
     
     def header(self):
         self.set_font("DejaVuSans", "B", FONT_SZ_HEADER)
@@ -36,7 +40,7 @@ class PDF(FPDF):
         # Go to 1.5 cm from bottom
         self.set_y(-15)
         self.set_font("DejaVuSans", "", FONT_SZ_FOOTER)
-        self.cell(0, 10, f"Page {self.page_no()}", align=Align.R, new_x=XPos.RIGHT, new_y=YPos.TOP)
+        self.cell(0, 10, f"Page {self.page_no() - self.local_page_no + 1}", align=Align.R, new_x=XPos.RIGHT, new_y=YPos.TOP)
 
     def row(self, height, cells, border="B",
             weights=("", "", "", ""),
@@ -107,10 +111,10 @@ class PDF(FPDF):
                  weights=["", "", "B", "B"],
                  aligns=["L", "L", "L", "R"])
 
-def generate_reports(csv_file):
+def generate_reports(csv_file_path):
     data = defaultdict(list)
 
-    with open(csv_file, newline='') as csvfile:
+    with open(csv_file_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             activity = row["Offer\nName"]
@@ -128,15 +132,16 @@ def generate_reports(csv_file):
                 'price': float(row["Reservation\nPrice"])
             })
 
+    pdf = PDF()
+    
+    pdf.set_margins(16, 20, 16) # L T R 
     for customer_invoice_address_name, activities in data.items():
-        pdf = PDF()
-
-        pdf.set_margins(16, 20, 16) # L T R 
         
         pdf.add_font('DejaVuSans', '', f'{FONT_PATH}/DejaVuSans.ttf')
         pdf.add_font('DejaVuSans', 'B', f'{FONT_PATH}/DejaVuSans-Bold.ttf')
         pdf.add_font('DejaVuSans', 'I', f'{FONT_PATH}/DejaVuSans-Oblique.ttf')
         pdf.add_page()
+        pdf.new_document()
 
         # Initial content
         pdf.set_font("DejaVuSans", "B", FONT_SZ_NORMAL)
@@ -154,9 +159,10 @@ def generate_reports(csv_file):
         # Adding activity data
         pdf.add_commune_data(customer_invoice_address_name, activities)
 
-        # Step 3: Save PDF
-        filename_suffix = customer_invoice_address_name.replace(' ', '-').replace("'", "")
-        pdf.output(f"facture_{filename_suffix}.pdf")
-        print(f"Generated PDF for {customer_invoice_address_name}")
+    filename_suffix = customer_invoice_address_name.replace(' ', '-').replace("'", "")
+    pdf.output(f"facture_{filename_suffix}.pdf")
+    print(f"Generated PDF for {customer_invoice_address_name}")
 
-generate_reports("export.csv")
+if __name__ == '__main__':
+    import sys
+    generate_reports(sys.argv[1])
