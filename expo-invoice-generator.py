@@ -155,7 +155,7 @@ def generate_reports(csv_file):
         pdf.add_commune_data(customer_invoice_address_name, activities)
 
         # Step 3: Save PDF
-        filename_suffix = customer_invoice_address_name.translate(str.maketrans(" '", "-"))
+        filename_suffix = customer_invoice_address_name.replace(' ', '-').replace("'", "")
         pdf.output(f"facture_{filename_suffix}.pdf")
         print(f"Generated PDF for {customer_invoice_address_name}")
 
