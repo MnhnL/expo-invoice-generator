@@ -2,6 +2,7 @@ import csv
 import os.path
 from collections import defaultdict
 import datetime
+import platform
 
 from openpyxl import load_workbook
 
@@ -16,11 +17,18 @@ FONT_SZ_TABLE_ROW = 8
 
 FONT_SZ_NORMAL = 10
 
-FONT_PATH = "/usr/share/fonts/truetype/dejavu"
-FONT_NAME = "DejaVuSans"
-FONT_FILE_REGULAR = "DejaVuSans.ttf"
-FONT_FILE_OBLIQUE = "DejaVuSans-Oblique.ttf"
-FONT_FILE_BOLD = "DejaVuSans-Bold.ttf"
+if platform.system() == 'Linux':
+    FONT_PATH = "/usr/share/fonts/truetype/dejavu"
+    FONT_NAME = "DejaVuSans"
+    FONT_FILE_REGULAR = "DejaVuSans.ttf"
+    FONT_FILE_OBLIQUE = "DejaVuSans-Oblique.ttf"
+    FONT_FILE_BOLD = "DejaVuSans-Bold.ttf"
+elif platform.system() == 'Windows':
+    FONT_PATH = "C:\\Windows\\Fonts"
+    FONT_NAME = "Segoe UI"
+    FONT_FILE_REGULAR = "segoeui.ttf"
+    FONT_FILE_OBLIQUE = "segoeuii.ttf"
+    FONT_FILE_BOLD = "segoeuib.ttf"
 
 ROW_HEIGHT_HEADER = 8
 ROW_HEIGHT_ROW = 6
