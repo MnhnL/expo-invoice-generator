@@ -171,8 +171,9 @@ def generate_reports(file_path):
             'responsable': get_col(row, "Booker\nFull name"),
             'customer_name': get_col(row, "Customer\nName"),
             'booking_number': get_col(row, "Booking\nNumber"),
+            'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
             'datetime': get_col(row, "Offer\nEnd date & time"),
-            'price': float(get_col(row, "Reservation\nPrice"))
+            'price': float(get_col(row, "Reservation\nPrice")),
         })
 
     if csvfile:
