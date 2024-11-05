@@ -102,7 +102,7 @@ class PDF(FPDF):
     def add_commune_data(self, commune, events):
         self.set_font(FONT_NAME, "B", FONT_SZ_TABLE_HEADER)
         self.row(ROW_HEIGHT_HEADER,
-                 ["Date / # Activité", "Responsable", "Nom", "Prix"],
+                 ["Date / # Activité", "Responsable", "Nom / Commentaire interne", "Prix"],
                  weights=["I", "I", "I", "I"],
                  aligns=["L", "L", "L", "R"])
 
@@ -110,6 +110,9 @@ class PDF(FPDF):
 
         self.set_font(FONT_NAME, "", FONT_SZ_TABLE_ROW)
         for entry in events:
+            if entry['booking_payment'] != "Facture et bon de commande":
+                continue
+            
             total_sum += entry['price']
 
             self.row(ROW_HEIGHT_ROW, [
@@ -119,7 +122,7 @@ class PDF(FPDF):
                 format_price(entry['price'])
             ], border="", weights=["", "B", "B", ""], aligns=["L", "L", "L", "R"])
             self.row(ROW_HEIGHT_ROW,
-                     [entry['datetime'], entry['customer_name'], "", ""],
+                     [entry['datetime'], entry['customer_name'], entry['booking_internal_comment'], ""],
                      weights=["", "I", "", ""])
 
         # Total sum for the commune
@@ -171,6 +174,7 @@ def generate_reports(file_path):
             'responsable': get_col(row, "Booker\nFull name"),
             'customer_name': get_col(row, "Customer\nName"),
             'booking_number': get_col(row, "Booking\nNumber"),
+            'booking_payment': get_col(row, "Booking\nPayment"),
             'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
             'datetime': get_col(row, "Offer\nEnd date & time"),
             'price': float(get_col(row, "Reservation\nPrice")),
@@ -200,7 +204,6 @@ def generate_reports(file_path):
         a0 = activities[0]
         pdf.multi_cell(0, 5, f"{a0['cia_name']}\n{a0['cia_street']}\n{a0['cia_zip']} {a0['cia_city']}", 0, 'L')
         pdf.ln(10)
-
 
         # Adding activity data
         pdf.add_commune_data(customer_invoice_address_name, activities)
