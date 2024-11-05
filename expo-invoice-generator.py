@@ -134,6 +134,7 @@ def generate_reports(file_path):
     
     get_col = None # Extracts value from row and col name
     rows = None # Iterates rows
+    csvfile = None
     
     if extension == "csv":
         csvfile = open(file_path, newline='')
@@ -174,7 +175,8 @@ def generate_reports(file_path):
             'price': float(get_col(row, "Reservation\nPrice"))
         })
 
-    csvfile.close()
+    if csvfile:
+        csvfile.close()
 
     pdf = PDF()
     
