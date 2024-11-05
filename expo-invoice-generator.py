@@ -208,7 +208,8 @@ def generate_reports(file_path):
         # Adding activity data
         pdf.add_commune_data(customer_invoice_address_name, activities)
 
-    suffix = datetime.datetime.now().isoformat()
+    # suffix = datetime.datetime.now().isoformat()
+    suffix = datetime.date.today().isoformat()
     filename = f"facture_{suffix}.pdf"
     pdf.output(filename)
     print(f"Generated PDF {filename}")
