@@ -30,8 +30,8 @@ elif platform.system() == 'Windows':
     FONT_FILE_OBLIQUE = "segoeuii.ttf"
     FONT_FILE_BOLD = "segoeuib.ttf"
 
-ROW_HEIGHT_HEADER = 8
-ROW_HEIGHT_ROW = 6
+ROW_HEIGHT_HEADER = 4
+ROW_HEIGHT_ROW = 5
 
 def format_price(p):
     return f"{p:,.2f} €".translate(str.maketrans(",.", ".,"))
@@ -42,7 +42,7 @@ def format_booking_number(bn_int):
 
 # Initialize FPDF class
 class PDF(FPDF):
-    widths = (30, 68, 60, 25)
+    widths = (30, 40, 35, 47, 25)
     local_page_no = 0
 
     def new_document(self):
@@ -60,13 +60,13 @@ class PDF(FPDF):
         self.cell(0, 10, f"Page {self.page_no() - self.local_page_no + 1}", align=Align.R, new_x=XPos.RIGHT, new_y=YPos.TOP)
 
     def row(self, height, cells, border="B",
-            weights=("", "", "", ""),
+            styles=("", "", "", ""),
             aligns=("L", "L", "L", "L")):
 
         # Measure cell height in lines
         cell_col_lines = []
-        for i, el in enumerate(zip(cells, self.widths, aligns, weights)):
-            text, width, a, weight = el
+        for i, el in enumerate(zip(cells, self.widths, aligns, styles)):
+            text, width, a, style = el
             if i < len(cells)-1:
                 new_x = XPos.RIGHT
                 new_y = YPos.TOP
@@ -74,17 +74,17 @@ class PDF(FPDF):
                 new_x = XPos.LMARGIN
                 new_y = YPos.NEXT
 
-            self.set_font(FONT_NAME, weight, FONT_SZ_TABLE_ROW)
-            cell_col_lines.append(
-                self.multi_cell(width, height, text, border=border, align=a,
-                                new_x=new_x, new_y=new_y, wrapmode=WrapMode.CHAR,
-                                dry_run=True, output=MethodReturnValue.LINES))
+            self.set_font(FONT_NAME, style, FONT_SZ_TABLE_ROW)
+            cell_lines = self.multi_cell(width, height, text, border=border, align=a,
+                                         new_x=new_x, new_y=new_y, wrapmode=WrapMode.CHAR,
+                                         dry_run=True, output=MethodReturnValue.LINES)
+            cell_col_lines.append(cell_lines)
 
         max_lines = max([len(cell_lines) for cell_lines in cell_col_lines])
 
         # Actually output cells
-        for i, el in enumerate(zip(cell_col_lines, self.widths, aligns, weights)):
-            cell_lines, width, a, weight = el
+        for i, el in enumerate(zip(cell_col_lines, self.widths, aligns, styles)):
+            cell_lines, width, align, style = el
             if i < len(cells)-1:
                 new_x = XPos.RIGHT
                 new_y = YPos.TOP
@@ -92,19 +92,20 @@ class PDF(FPDF):
                 new_x = XPos.LMARGIN
                 new_y = YPos.NEXT
 
-            self.set_font(FONT_NAME, weight, FONT_SZ_TABLE_ROW)
+            self.set_font(FONT_NAME, style, FONT_SZ_TABLE_ROW)
             empty_lines = max_lines - len(cell_lines)
-            text = "".join(cell_lines + ["\n " * empty_lines])
+            text = "\n".join(cell_lines) + "".join(["\n "] * empty_lines)
 
-            self.multi_cell(width, height, text, border=border, align=a,
+            self.multi_cell(width, height, text, border=border, align=align,
                             new_x=new_x, new_y=new_y, wrapmode=WrapMode.CHAR)
 
     def add_commune_data(self, commune, events):
         self.set_font(FONT_NAME, "B", FONT_SZ_TABLE_HEADER)
         self.row(ROW_HEIGHT_HEADER,
-                 ["Date / # Activité", "Responsable", "Nom / Commentaire interne", "Prix"],
-                 weights=["I", "I", "I", "I"],
-                 aligns=["L", "L", "L", "R"])
+                 ["# Réservation /\nDate & Heure", "Réservateur /\nInstitution",
+                  "Titulaire /\n# bon commande", "Activité /\nGroupe (cycle, ...)", "\nTarif"],
+                 styles=["I", "I", "I", "I", "I"],
+                 aligns=["L", "L", "L", "L", "R"])
 
         total_sum = 0
 
@@ -115,21 +116,30 @@ class PDF(FPDF):
             
             total_sum += entry['price']
 
+            # Sub-row 1
             self.row(ROW_HEIGHT_ROW, [
                 format_booking_number(entry['booking_number']),
                 entry['responsable'],
+                entry['titulaire'],
                 entry['activity'],
-                format_price(entry['price'])
-            ], border="", weights=["", "B", "B", ""], aligns=["L", "L", "L", "R"])
+                ""
+            ], border="", styles=["", "B", "",  "B", ""], aligns=["L", "L", "L", "L", "R"])
+
+            # Sub-row 2
             self.row(ROW_HEIGHT_ROW,
-                     [entry['datetime'], entry['customer_name'], entry['booking_internal_comment'], ""],
-                     weights=["", "I", "", ""])
+                     [entry['datetime'],
+                      entry['customer_name'],
+                      entry['bon_commande'],
+                      entry['booking_internal_comment'],
+                      format_price(entry['price'])],
+                     styles=["", "I", "", "", ""],
+                     aligns=["L", "L", "L", "L", "R"])
 
         # Total sum for the commune
         self.set_font(FONT_NAME, "B", FONT_SZ_TABLE_ROW)
-        self.row(ROW_HEIGHT_ROW, ["", "", "Total", format_price(total_sum)],
-                 weights=["", "", "B", "B"],
-                 aligns=["L", "L", "L", "R"])
+        self.row(ROW_HEIGHT_ROW, ["", "", "", "Total", format_price(total_sum)],
+                 styles=["", "", "", "B", "B"],
+                 aligns=["L", "L", "L", "L", "R"])
 
 def generate_reports(file_path):
     data = defaultdict(list)
@@ -155,7 +165,10 @@ def generate_reports(file_path):
         cols = {c.value: c.column for c in row0}
 
         def get_col(row, col_name):
-            return row[cols[col_name]-1].value
+            v = row[cols[col_name]-1].value
+            if type(v) == str:
+                return v.strip()
+            return v
         rows = sh.iter_rows(min_row=2, max_row=max_row)
 
     else:
@@ -176,8 +189,10 @@ def generate_reports(file_path):
             'booking_number': get_col(row, "Booking\nNumber"),
             'booking_payment': get_col(row, "Booking\nPayment"),
             'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
-            'datetime': get_col(row, "Offer\nEnd date & time"),
+            'datetime': get_col(row, "Offer\nStart date & time"),
             'price': float(get_col(row, "Reservation\nPrice")),
+            'titulaire': get_col(row, "Property\nNom du titulaire"),
+            'bon_commande': get_col(row, "Property\nNuméro bon de commande"),
         })
 
     if csvfile:
@@ -195,7 +210,7 @@ def generate_reports(file_path):
 
         # Initial content
         pdf.set_font(FONT_NAME, 'B', FONT_SZ_NORMAL)
-        pdf.multi_cell(0, 5, f"Adresse de facturation pour la commune {customer_invoice_address_name} et les visites ci-dessous:", 0, 'L')
+        pdf.multi_cell(0, 5, f"Adresse de facturation: ", 0, 'L')
         pdf.ln(2)
 
         pdf.set_font(FONT_NAME, '', FONT_SZ_NORMAL)
