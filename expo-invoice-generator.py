@@ -103,7 +103,7 @@ class PDF(FPDF):
         self.set_font(FONT_NAME, "B", FONT_SZ_TABLE_HEADER)
         self.row(ROW_HEIGHT_HEADER,
                  ["# Réservation /\nDate & Heure", "Réservateur /\nInstitution",
-                  "Titulaire /\n# bon commande", "Activité /\nGroupe (cycle, ...)", "\nTarif"],
+                  "Titulaire /\n# bon commande", "Activité\n", "\nTarif"],
                  styles=["I", "I", "I", "I", "I"],
                  aligns=["L", "L", "L", "L", "R"])
 
@@ -130,7 +130,7 @@ class PDF(FPDF):
                      [entry['datetime'],
                       entry['customer_name'],
                       entry['bon_commande'],
-                      entry['booking_internal_comment'],
+                      "", # entry['booking_internal_comment'],
                       format_price(entry['price'])],
                      styles=["", "I", "", "", ""],
                      aligns=["L", "L", "L", "L", "R"])
@@ -188,7 +188,7 @@ def generate_reports(file_path):
             'customer_name': get_col(row, "Customer\nName"),
             'booking_number': get_col(row, "Booking\nNumber"),
             'booking_payment': get_col(row, "Booking\nPayment"),
-            'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
+            # 'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
             'datetime': get_col(row, "Offer\nStart date & time"),
             'price': float(get_col(row, "Reservation\nPrice")),
             'titulaire': get_col(row, "Property\nNom du titulaire"),
