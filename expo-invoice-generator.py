@@ -12,10 +12,10 @@ from fpdf.enums import MethodReturnValue, WrapMode
 FONT_SZ_HEADER = 14
 FONT_SZ_FOOTER = 7
 
-FONT_SZ_TABLE_HEADER = 10
-FONT_SZ_TABLE_ROW = 8
+FONT_SZ_TABLE_HEADER = 8
+FONT_SZ_TABLE_ROW = 7
 
-FONT_SZ_NORMAL = 10
+FONT_SZ_NORMAL = 8
 
 if platform.system() == 'Linux':
     FONT_PATH = "/usr/share/fonts/truetype/dejavu"
@@ -42,7 +42,7 @@ def format_booking_number(bn_int):
 
 # Initialize FPDF class
 class PDF(FPDF):
-    widths = (30, 40, 35, 47, 25)
+    widths = (25, 57, 35, 55, 15)
     local_page_no = 0
 
     def new_document(self):
@@ -200,7 +200,7 @@ def generate_reports(file_path):
 
     pdf = PDF()
     
-    pdf.set_margins(16, 20, 16) # L T R 
+    pdf.set_margins(12, 18, 12) # L T R
     for customer_invoice_address_name, activities in data.items():
         pdf.add_font(FONT_NAME, '', os.path.join(FONT_PATH, FONT_FILE_REGULAR))
         pdf.add_font(FONT_NAME, 'B', os.path.join(FONT_PATH, FONT_FILE_BOLD))
