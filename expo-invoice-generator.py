@@ -174,6 +174,20 @@ def generate_reports(file_path):
     else:
         raise Exception("Cant read this file type. Try csv or xlsx!")
 
+    def get_first_defined_col(row, col_name_candidates):
+        col = None
+        for col_name_candidate in col_name_candidates:
+            try:
+                col = get_col(row, col_name_candidate)
+                break
+            except KeyError:
+                continue
+
+        if col == None:
+            raise KeyError("Could not find any of the columns" + ", ".join(col_name_candidates))
+
+        return col
+
     # Actually read
     for row in rows:
         activity = get_col(row, "Offer\nName")
@@ -189,7 +203,7 @@ def generate_reports(file_path):
             'booking_number': get_col(row, "Booking\nNumber"),
             'booking_payment': get_col(row, "Booking\nPayment"),
             # 'booking_internal_comment': get_col(row, "Booking\nInternal comment"),
-            'datetime': get_col(row, "Offer\nStart date & time"),
+            'datetime': get_first_defined_col(row, ["Offer\nStart date & time", "Program\nStart date & time"]),
             'price': float(get_col(row, "Reservation\nPrice")),
             'titulaire': get_col(row, "Property\nNom du titulaire"),
             'bon_commande': get_col(row, "Property\nNuméro bon de commande"),
